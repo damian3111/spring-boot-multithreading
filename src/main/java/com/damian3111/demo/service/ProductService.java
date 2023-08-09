@@ -3,6 +3,7 @@ package com.damian3111.demo.service;
 import com.damian3111.demo.ProductDTO;
 import com.damian3111.demo.entity.Product;
 import com.damian3111.demo.repository.ProductRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -10,16 +11,16 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
+@RequiredArgsConstructor
 @Log4j2
 @Service
 public class ProductService {
     private final Random random = new Random();
     private final ProductRepository productRepository;
+    private final Executor executor;
 
-    public ProductService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
 
     public CompletableFuture<Product> save(ProductDTO productDTO) {
         doSomething();
@@ -28,7 +29,7 @@ public class ProductService {
             product.setName(productDTO.getName());
             product.setPrice(productDTO.getPrice());
             return productRepository.save(product);
-        });
+        }, executor);
     }
 
     public CompletableFuture<Product> getProduct(long productId) {
@@ -37,10 +38,10 @@ public class ProductService {
             log.info(Thread.currentThread().getName());
             doSomething();
             return productRepository.findById(productId).orElseThrow();
-        });
+        }, executor);
     }
 
-    @Async
+    @Async("threadPoolTaskExecutor")
     public CompletableFuture<List<Product>> getAllProducts() {
         log.info(Thread.currentThread().getName());
         doSomething();
